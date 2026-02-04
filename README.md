@@ -1,7 +1,3 @@
-Perfeito, Henrique! Aqui está um **README.md** profissional para o seu projeto **DogWalker Agenda** 👇
-
----
-
 # 🐾 DogWalker Agenda
 
 Sistema simples de agendamento de passeios para cães, feito com **HTML, CSS e JavaScript puro**, usando `localStorage` para salvar os dados no navegador.
