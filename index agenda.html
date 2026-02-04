@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DogWalker - Agenda</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f9f9f9;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--light); color: var(--dark); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        h1 { text-align: center; color: var(--primary); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: #777; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+
+        form { display: grid; gap: 10px; margin-bottom: 30px; }
+        input, button { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        button { background: var(--primary); color: white; border: none; cursor: pointer; transition: 0.3s; }
+        button:hover { background: var(--secondary); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f4f4f4; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .pendente { background: #ffeaa7; color: #d6a316; }
+        .confirmado { background: #55efc4; color: #00b894; }
+        .btn-delete { background: #ff7675; padding: 5px 10px; font-size: 12px; }
+        
+        .hidden { display: none; }
+
+        /* 📱 RESPONSIVO */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .tabs { flex-direction: column; }
+            .tab-btn { width: 100%; }
+
+            table, thead, tbody, th, td, tr {
+                display: block;
+                width: 100%;
+            }
+
+            thead { display: none; }
+
+            tr {
+                margin-bottom: 15px;
+                background: #f8f8f8;
+                padding: 10px;
+                border-radius: 8px;
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px;
+            }
+
+            td::before {
+                content: attr(data-label);
+                font-weight: bold;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🐾 DogWalker Agenda</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('cliente', event)">Área do Cliente</button>
+        <button class="tab-btn" onclick="abrirLogin(event)">Painel do Gestor</button>
+    </div>
+
+    <div id="view-cliente">
+        <h3>Agende um passeio</h3>
+        <form id="form-agenda">
+            <input type="text" id="nome-cliente" placeholder="Seu nome" required>
+            <input type="text" id="nome-pet" placeholder="Nome do seu pet" required>
+            <input type="date" id="data-passeio" required>
+            <input type="time" id="hora-passeio" required>
+            <button type="submit">Solicitar Agendamento</button>
+        </form>
+    </div>
+
+    <div id="login-gestor" class="hidden">
+        <h3>Login do Gestor</h3>
+        <form onsubmit="validarLogin(event)">
+            <input type="password" id="senha-gestor" placeholder="Digite a senha" required>
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+
+    <div id="view-gestor" class="hidden">
+        <h3>Gerenciar Passeios</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Cliente (Pet)</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="lista-agendamentos"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let agendamentos = JSON.parse(localStorage.getItem('dogwalker_dados')) || [];
+
+function switchTab(tab, event) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('view-cliente').classList.remove('hidden');
+    document.getElementById('login-gestor').classList.add('hidden');
+    document.getElementById('view-gestor').classList.add('hidden');
+}
+
+function abrirLogin(event) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('view-cliente').classList.add('hidden');
+    document.getElementById('login-gestor').classList.remove('hidden');
+}
+
+function validarLogin(e) {
+    e.preventDefault();
+    if (senhaGestor.value === "dog123") {
+        loginGestor.classList.add('hidden');
+        viewGestor.classList.remove('hidden');
+        renderizarTabela();
+    } else alert("Senha incorreta!");
+}
+
+formAgenda.addEventListener('submit', e => {
+    e.preventDefault();
+    agendamentos.push({
+        id: Date.now(),
+        cliente: nomeCliente.value,
+        pet: nomePet.value,
+        data: dataPasseio.value,
+        hora: horaPasseio.value,
+        status: 'Pendente'
+    });
+    localStorage.setItem('dogwalker_dados', JSON.stringify(agendamentos));
+    alert('Agendado!');
+    e.target.reset();
+});
+
+function renderizarTabela() {
+    listaAgendamentos.innerHTML = '';
+    agendamentos.forEach(item => {
+        listaAgendamentos.innerHTML += `
+        <tr>
+            <td data-label="Data/Hora">${item.data.split('-').reverse().join('/')} ${item.hora}</td>
+            <td data-label="Cliente">${item.cliente} (${item.pet})</td>
+            <td data-label="Status"><span class="status-badge ${item.status.toLowerCase()}">${item.status}</span></td>
+            <td data-label="Ações">
+                <button onclick="mudarStatus(${item.id})">✔</button>
+                <button class="btn-delete" onclick="remover(${item.id})">🗑</button>
+            </td>
+        </tr>`;
+    });
+}
+
+function mudarStatus(id) {
+    agendamentos = agendamentos.map(i => i.id === id ? {...i, status:'Confirmado'} : i);
+    salvar();
+}
+
+function remover(id) {
+    agendamentos = agendamentos.filter(i => i.id !== id);
+    salvar();
+}
+
+function salvar() {
+    localStorage.setItem('dogwalker_dados', JSON.stringify(agendamentos));
+    renderizarTabela();
+}
+</script>
+
+</body>
+</html>
